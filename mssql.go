@@ -184,12 +184,17 @@ func (c *Conn) checkBadConn(err error) error {
 		panic("driver.ErrBadConn in checkBadConn. This should not happen.")
 	}
 
-	switch err.(type) {
+	switch typedErr := err.(type) {
 	case net.Error:
 		c.connectionGood = false
 		return err
 	case StreamError:
 		c.connectionGood = false
+		return err
+	case Error:
+		if strings.HasPrefix(typedErr.Message, "The server failed to resume the transaction.") {
+			c.connectionGood = false
+		}
 		return err
 	default:
 		return err
